@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wishy Stardust Shop</title>
+  <style>
+    /* Your existing CSS remains unchanged */
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), rgba(255, 218, 235, 0.8)), url('background-stars.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px 20px;
+    }
+
+    header img {
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .bundle-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 25px;
+      padding: 30px 20px 80px;
+    }
+
+    .bundle {
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      padding: 20px 25px;
+      width: 230px;
+      text-align: center;
+    }
+
+    .login-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      text-align: center;
+    }
+
+    .login-screen h1 {
+      background: linear-gradient(90deg, #3a8dde, #e94080);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    .login-screen button {
+      background: #7289da;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <h1>Login to Access the Stardust Store</h1>
+    <button onclick="discordLogin()">Login with Discord</button>
+  </div>
+
+  <!-- Stardust Shop -->
+  <div id="stardust-shop" style="display: none;">
+    <header>
+      <img src="wishy-header.png" alt="Wishy Logo">
+      <h1 style="background: linear-gradient(90deg, #3a8dde, #e94080); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">✨ Stardust Store ✨</h1>
+    </header>
+
+    <div class="bundle-container">
+      <div class="bundle">
+        <h2>110 Stardust</h2>
+        <div class="price">$1</div>
+        <a href="https://www.paypal.com/ncp/payment/ZTW6PLT2KK8BG" target="_blank" onclick="logPurchase('110 Stardust')">Purchase!</a>
+      </div>
+      <div class="bundle">
+        <h2>650 Stardust</h2>
+        <div class="price">$5</div>
+        <a href="https://www.paypal.com/ncp/payment/ED85NHJ8DZ7CL" target="_blank" onclick="logPurchase('650 Stardust')">Purchase!</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log("JavaScript is working!");
+    const clientId = "11387457541381816381"; // Your Client ID
+    const redirectUri = "https://wsdshop.vercel.app"; // Your hosted site URL
+    const loggingWebhook = "https://discord.com/api/webhooks/1387803875075162265/Jk4Pn2cDDvJ-ESd2y20xeB3OwJF1rXA0-CWtqlFmXSIgRM4dEZaKbUWI7bQc4LbnZcnL"; // Webhook URL
+
+    // OAuth2 Login Redirect
+    function discordLogin() {
+      const oauth2Url = `https://discord.com/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=identify`;
+      window.location.href = oauth2Url;
+    }
+
+    // Fetch Discord User Data After Login
+    function fetchDiscordData() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+
+      if (accessToken) {
+        fetch("https://discord.com/api/users/@me", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+          .then((res) => res.json())
+          .then((user) => {
+            alert(`Welcome, ${user.username}!`);
+            localStorage.setItem("discordUser", JSON.stringify(user));
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("stardust-shop").style.display = "block";
+          });
+      }
+    }
+
+    // Log Purchase to Discord Webhook
+    function logPurchase(bundle) {
+      const user = JSON.parse(localStorage.getItem("discordUser"));
+      if (!user) {
+        alert("Please log in first.");
+        return;
+      }
+
+      fetch(loggingWebhook, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: `User **${user.username}#${user.discriminator}** purchased **${bundle}**`,
+        }),
+      }).then(() => {
+        alert(`Purchase logged: ${bundle}`);
+      });
+    }
+
+    // Initialize Fetch Data If Logged In
+    if (window.location.hash) {
+      fetchDiscordData();
+    }
+  </script>
+</body>
+</html>
